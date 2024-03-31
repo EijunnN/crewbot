@@ -1,0 +1,52 @@
+name: Deploy Bot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.x]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to VPS
+        run: |
+          ssh -o StrictHostKeyChecking=no artur@35.199.119.149 <<EOF
+            sudo -i
+            # Eliminar el directorio actual completamente y recrearlo
+            rm -rf /home/arturo97xd/bot
+            mkdir -p /home/arturo97xd/bot
+            # Clonar el repositorio de nuevo
+            git clone git@github.com:EijunnN/CompeSV.git /home/arturo97xd/bot
+            cd /home/arturo97xd/bot
+            # Asegurar la propiedad y permisos del directorio
+            chown -R arturo97xd:arturo97xd /home/arturo97xd/bot
+            chmod -R 755 /home/arturo97xd/bot
+            # Crear o sobrescribir el archivo .env con las variables de entorno
+            echo "DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}" > .env
+            echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> .env
+            echo "TEST_GUILD_ID=${{ secrets.TEST_GUILD_ID }}" >> .env
+            echo "ROLE_ID=${{ secrets.ROLE_ID }}" >> .env
+            echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> .env
+            echo "GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}" >> .env
+            if [ -f package.json ]; then
+              npm list -g pm2 || sudo npm install -g pm2
+              sudo npm install --unsafe-perm
+              pm2 stop DiscordBot || true
+              pm2 delete DiscordBot || true
+              pm2 start 'npm run dev' --name DiscordBot
+            else
+              echo "Error: package.json no encontrado."
+            fi
+          EOF
