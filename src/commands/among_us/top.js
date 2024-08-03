@@ -1,91 +1,108 @@
 const {
   EmbedBuilder,
   ActionRowBuilder,
-  SelectMenuBuilder,
   StringSelectMenuBuilder,
+  PermissionFlagsBits
 } = require("discord.js");
 const { ChatCommand } = require("../../utils/commands");
 const { UserModel } = require("../../../lib/models/schema");
 
 module.exports = ChatCommand({
   name: "top",
-  description: "Mira el top 10",
+  description: "Mira el top 10 de usuarios",
   async execute(client, interaction) {
-    const allowedChannelId = "1175911160982274068"; //comandos compe
-    const privilegedRoleId = "1172263693111795822";
+    const ALLOWED_CHANNEL_ID = "1175911160982274068"; // canal de comandos compe
+    const PRIVILEGED_ROLE_ID = "1172263693111795822";
 
-    // Verificar si el usuario tiene el rol privilegiado
-    const hasPrivilegedRole =
-      interaction.member.roles.cache.has(privilegedRoleId);
-
-    // Verificar si el comando se está ejecutando en el canal correcto o si el usuario tiene el rol privilegiado
-    if (!hasPrivilegedRole && interaction.channelId !== allowedChannelId) {
+    if (!canExecuteCommand(interaction, ALLOWED_CHANNEL_ID, PRIVILEGED_ROLE_ID)) {
       return interaction.reply({
-        content: `Este comando solo se puede usar en el canal <#${allowedChannelId}> por usuarios sin el rol especial.`,
-        ephemeral: true,
+        content: `Este comando solo se puede usar en el canal <#${ALLOWED_CHANNEL_ID}> por usuarios sin el rol especial.`,
+        ephemeral: true
       });
     }
 
-    // Obtener y ordenar perfiles de usuarios por puntos, excluyendo a aquellos con 0 puntos
-    const users = await UserModel.find({ puntos: { $gt: 0 } })
-      .sort({ puntos: -1 })
-      .limit(10);
+    await interaction.deferReply();
 
-    // Crear el embed
-    const embed = new EmbedBuilder()
-      .setColor("Yellow")
-      .setTitle(`TOP 10 en ${interaction.guild.name}`);
-
-    // Establecer el thumbnail si hay usuarios en el top
-    if (users.length > 0) {
-      const topUser = await client.users.fetch(users[0].id);
-      embed.setThumbnail(topUser.displayAvatarURL());
-    } else {
-      embed.setDescription("Aún no han habido partidas.");
-    }
-
-    
-    users.forEach((user, index) => {
-      const userName = client.users.cache.get(user.id)?.displayName ?? user.id;
-      // const userName = client.users.cache.get(user.id)?.username ?? user.id;
-      embed.addFields({
-        name: `${index + 1}. ${userName}${index === 0 ? " 👑" : ""} | \`🎖️${
-          user.puntos
-        }\``,
-        // value: `🎖️ Puntos totales: \`${user.puntos}\``,
-        value: " ",
+    try {
+      const users = await getTopUsers();
+      const embed = await createTopEmbed(interaction, users);
+      await interaction.editReply({
+        embeds: [embed],
+        components: [createLeagueMenu()]
       });
-    });
-
-    // Enviar el embed junto con el menú de selección de ligas
-    await interaction.reply({
-      embeds: [embed],
-      components: [createLeagueMenu()],
-    });
-  },
+    } catch (error) {
+      console.error("Error al recuperar el top de usuarios:", error);
+      await interaction.editReply("Hubo un error al recuperar los datos del top.");
+    }
+  }
 });
 
+function canExecuteCommand(interaction, allowedChannelId, privilegedRoleId) {
+  const hasPrivilegedRole = interaction.member.roles.cache.has(privilegedRoleId);
+  return hasPrivilegedRole || interaction.channelId === allowedChannelId;
+}
+
+async function getTopUsers() {
+  return await UserModel.find({ puntos: { $gt: 0 } })
+    .sort({ puntos: -1 })
+    .limit(10);
+}
+
+async function createTopEmbed(interaction, users) {
+  const embed = new EmbedBuilder()
+    .setColor("Yellow")
+    .setTitle(`TOP 10 en ${interaction.guild.name}`);
+
+  if (users.length > 0) {
+    const userIds = users.map(user => user.id);
+    const guildMembers = await fetchGuildMembers(interaction.guild, userIds);
+
+    const topUser = guildMembers.get(users[0].id);
+    embed.setThumbnail(topUser?.displayAvatarURL() || null);
+    
+    users.forEach((user, index) => {
+      const member = guildMembers.get(user.id);
+      const userName = member?.displayName || `Usuario ${user.id}`;
+      embed.addFields({
+        name: `${index + 1}. ${userName}${index === 0 ? " 👑" : ""} | \`🎖️${user.puntos}\``,
+        value: " " // Espacio en blanco invisible
+      });
+    });
+  } else {
+    embed.setDescription("Aún no han habido partidas.");
+  }
+
+  return embed;
+}
+
+async function fetchGuildMembers(guild, userIds) {
+  try {
+    const members = await guild.members.fetch({ user: userIds });
+    return members;
+  } catch (error) {
+    console.error("Error al obtener miembros del servidor:", error);
+    return new Map();
+  }
+}
+
 function createLeagueMenu() {
-  const selectMenu = new StringSelectMenuBuilder()
-    .setCustomId("select_league")
-    .setPlaceholder("Selecciona una liga")
+  const leagues = [
+    { label: "Liga Radiante", value: "Radiante", emoji: "1192014930644320309" },
+    { label: "Liga Diamante", value: "Diamante", emoji: "1180597339812024491" },
+    { label: "Liga Platino", value: "Platino", emoji: "1180597342907412501" },
+    { label: "Liga Oro", value: "Oro", emoji: "1180597345017143356" },
+    { label: "Liga Plata", value: "Plata", emoji: "1180597348112539698" },
+    { label: "Liga Bronce", value: "Bronce", emoji: "1180595911471144980" }
+  ];
 
-    .addOptions([
-      {
-        label: "Liga Radiante",
-        value: "Radiante",
-        emoji: "1192014930644320309",
-      },
-      {
-        label: "Liga Diamante",
-        value: "Diamante",
-        emoji: "1180597339812024491",
-      },
-      { label: "Liga Platino", value: "Platino", emoji: "1180597342907412501" },
-      { label: "Liga Oro", value: "Oro", emoji: "1180597345017143356" },
-      { label: "Liga Plata", value: "Plata", emoji: "1180597348112539698" },
-      { label: "Liga Bronce", value: "Bronce", emoji: "1180595911471144980" },
-    ]);
-
-  return new ActionRowBuilder().addComponents(selectMenu);
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId("select_league")
+      .setPlaceholder("Selecciona una liga")
+      .addOptions(leagues.map(league => ({
+        label: league.label,
+        value: league.value,
+        emoji: league.emoji
+      })))
+  );
 }
