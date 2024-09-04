@@ -130,10 +130,10 @@ const QUEUE_LIMITS = {
 };
 
 
-const SPECIAL_CHANNEL_ID = "1182894223155003423"; // Comando Admin
-const SPECIAL_ROLE_ID = "1176722309634080808"; // El patron
-// const SPECIAL_CHANNEL_ID = "1178778700255330435";
-// const SPECIAL_ROLE_ID = "1166592852709609494";
+// const SPECIAL_CHANNEL_ID = "1182894223155003423"; // Comando Admin
+// const SPECIAL_ROLE_ID = "1176722309634080808"; // El patron
+const SPECIAL_CHANNEL_ID = "1178778700255330435";
+const SPECIAL_ROLE_ID = "1166592852709609494";
 const ADMIN_ROLE_IDS = ["1172263693111795822", "1166531316016234567"];
 
 const leagueEmojis = {
@@ -164,21 +164,20 @@ const encouragementMessages = [
 ];
 
 function getJoinInstructions(game) {
-  let instructions = "Para unirte a la lista , sigue estos pasos:\n";
-  instructions += "1. Usa el comando /join del bot Crew y elige el juego al que deseas ingresar.\n";
+  let instructions = "Para unirte al juego, sigue estos pasos:\n";
+  instructions += "1. Asegúrate de tener el juego instalado y actualizado.\n";
   
   if (game === "AmongUs") {
-    instructions += "2. Se paciente y espera a que se complete la lista.\n";
-    instructions += "3. Al completarse la lista, el arbitro compartirá el código de la sala.\n";
-    // instructions += "4. Introduce el código en el juego para unirte a la partida.\n";
+    instructions += "2. Abre Among Us y prepárate para unirte a una sala privada.\n";
+    instructions += "3. Espera a que se complete la cola y el arbitro compartirá el código de la sala.\n";
+    instructions += "4. Introduce el código en el juego para unirte a la partida.\n";
   } else if (game === "Codenames") {
-    instructions += "2. Se paciente y espera a que se complete la lista.\n";
-    instructions += "3. El anfitrión compartirá un enlace a la sala de Codenames.\n";
-    // instructions += "3. Haz clic en el enlace para unirte a la partida en tu navegador.\n";
-    // instructions += "4. Elige tu equipo y rol una vez estés en la sala.\n";
+    instructions += "2. El arbitro compartirá un enlace a la sala de Codenames.\n";
+    instructions += "3. Haz clic en el enlace para unirte a la partida en tu navegador.\n";
+    instructions += "4. Elige tu equipo y rol una vez estés en la sala.\n";
   }
   
-  instructions += "4. ¡Diviértete y disfruta del juego!\n";
+  instructions += "5. ¡Diviértete y juega con respeto hacia todos los participantes!";
   
   return instructions;
 }
@@ -234,7 +233,7 @@ async function updateQueueEmbed(client, game, queueNumber, removedPlayerUsername
   const encouragementMessage = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
 
   const message = await channel.send({
-    content: `<@&${SPECIAL_ROLE_ID}> ${encouragementMessage}\n\nPara unirte, usa el comando \`/join juego:${game}\` en cualquier canal.`,
+    content: `<@&${SPECIAL_ROLE_ID}> ${encouragementMessage}\n\nPara unirte a la lista, usa el comando \`/join juego:${game}\` en cualquier canal.`,
     embeds: [embed],
   });
 }

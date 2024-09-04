@@ -128,7 +128,7 @@ module.exports = ChatCommand({
       username: interaction.user.username,
       joinTime: Date.now(),
       points: userProfile.puntos,
-      league: userProfile.league || "No calificado",
+      league: userProfile.league || "✅",
       canCloseQueue: isFirstPlayer
     });
 
