@@ -3,7 +3,7 @@ const { ApplicationCommandOptionType } = require("discord.js");
 const { gameQueues, updateQueueEmbed, transferQueueClosingPermission  } = require("../../core/functions/queue");
 
 module.exports = ChatCommand({
-    name: "salir-cola",
+    name: "leave",
     description: "Sal de la cola de búsqueda de partidas",
     options: [
       {

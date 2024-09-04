@@ -3,7 +3,7 @@ const { ApplicationCommandOptionType, EmbedBuilder } = require("discord.js");
 const { gameQueues, ADMIN_ROLE_IDS, SPECIAL_CHANNEL_ID } = require("../../core/functions/queue");
 
 module.exports = ChatCommand({
-  name: "cerrar-cola",
+  name: "close",
   description: "Cierra una cola de búsqueda de partidas",
   options: [
     {
