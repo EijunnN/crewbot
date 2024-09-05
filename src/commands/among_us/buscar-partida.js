@@ -104,7 +104,7 @@ module.exports = ChatCommand({
     for (const [queueGame, queues] of Object.entries(gameQueues)) {
       for (const queue of queues) {
         if (queue.some(player => player.id === userId)) {
-          return interaction.reply({ content: `Ya estás en una cola de ${queueGame}. Usa /salir-cola para salir.`, ephemeral: true });
+          return interaction.reply({ content: `Ya estás en una cola de ${queueGame}. Usa /leave para salir.`, ephemeral: true });
         }
       }
     }
@@ -136,7 +136,7 @@ module.exports = ChatCommand({
     
     let replyContent = `¡Te has unido exitosamente a la cola #${queueNumber} de ${game} en la posición ${queuePosition}!`;
     if (isFirstPlayer) {
-      replyContent += "\n\nComo eres el primero en la cola, tienes permiso para cerrarla si es necesario usando el comando `/cerrar-cola`.";
+      replyContent += "\n\nComo eres el primero en la cola, tienes permiso para cerrarla si es necesario usando el comando `/close`.";
     }
     
     replyContent += `\n\n${getJoinInstructions(game)}`;
