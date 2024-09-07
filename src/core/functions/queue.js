@@ -209,7 +209,7 @@ async function updateQueueEmbed(client, game, queueNumber, removedPlayerUsername
     return {
       name: " ",
       value: `${index + 1}. <@${player.id}> - \`${waitTime}min\` ${leagueEmoji}\n`,
-      inline: true,
+      inline: false,
     };
   });
 
